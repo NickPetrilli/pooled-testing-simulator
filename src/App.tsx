@@ -1,49 +1,118 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { AnalyticsPanel } from "./components/AnalyticsPanel";
 import { ControlPanel } from "./components/ControlPanel";
 import { EventTimeline } from "./components/EventTimeline";
+import { SimulationHUD } from "./components/SimulationHUD";
 import { SimulationScene } from "./three/SimulationScene";
 import { useSimulationStore } from "./state/simulationStore";
 
+const STATUS_CONFIG = {
+  idle:     { label: "awaiting launch",   dotClass: "bg-emerald-400/30", textClass: "text-emerald-400/50", ping: false },
+  running:  { label: "simulation active", dotClass: "bg-bio-mint",       textClass: "text-bio-mint",       ping: true  },
+  paused:   { label: "paused",            dotClass: "bg-amber-300",      textClass: "text-amber-300",      ping: false },
+  complete: { label: "complete",          dotClass: "bg-cyan-300",       textClass: "text-cyan-300",       ping: false },
+} as const;
+
+const PANEL_TRANSITION = { duration: 0.45, ease: [0.4, 0, 0.2, 1] as const };
+
 export function App() {
   const playbackStatus = useSimulationStore((state) => state.playbackStatus);
-  const currentEvent = useSimulationStore((state) => state.currentEvent);
+  const currentEvent   = useSimulationStore((state) => state.currentEvent);
+
+  const status   = STATUS_CONFIG[playbackStatus] ?? STATUS_CONFIG.idle;
+  const isActive = playbackStatus !== "idle";
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#06100d] text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_12%,rgba(20,185,129,0.18),transparent_28%),radial-gradient(circle_at_78%_4%,rgba(90,180,255,0.13),transparent_24%),linear-gradient(135deg,rgba(8,16,13,0.96),rgba(18,27,22,0.9)_45%,rgba(33,27,20,0.88))]" />
-      <div className="absolute inset-0 opacity-[0.17] [background-image:linear-gradient(rgba(126,255,196,0.18)_1px,transparent_1px),linear-gradient(90deg,rgba(126,255,196,0.14)_1px,transparent_1px)] [background-size:54px_54px]" />
+    <main className="relative min-h-screen overflow-hidden bg-[#04090c] text-white">
+      {/* Ambient background */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_15%_0%,rgba(20,185,129,0.10),transparent),radial-gradient(ellipse_50%_40%_at_85%_0%,rgba(89,184,255,0.07),transparent)]" />
+      <div className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(126,255,196,1)_1px,transparent_1px),linear-gradient(90deg,rgba(126,255,196,1)_1px,transparent_1px)] [background-size:48px_48px]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(4,9,12,0.65)_100%)]" />
 
-      <section className="relative z-10 grid min-h-screen grid-cols-1 gap-4 p-4 lg:grid-cols-[360px_minmax(0,1fr)_340px] lg:p-5">
-        <ControlPanel />
+      {/* Main layout — flex so side panels collapse cleanly */}
+      <section className="relative z-10 flex min-h-screen items-stretch gap-4 p-4">
 
+        {/* ── Left panel — slides out when simulation starts ── */}
+        <AnimatePresence initial={false}>
+          {!isActive && (
+            <motion.div
+              key="left-panel"
+              initial={{ opacity: 0, x: -24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -24 }}
+              transition={PANEL_TRANSITION}
+              className="w-[360px] flex-shrink-0"
+            >
+              <ControlPanel />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ── Center — expands via layout animation ── */}
         <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          className="relative min-h-[560px] overflow-hidden rounded-lg border border-emerald-200/15 bg-black/20 shadow-glow backdrop-blur-xl"
+          layout
+          transition={PANEL_TRANSITION}
+          className="relative flex min-h-[560px] flex-1 overflow-hidden rounded-xl border border-white/8 bg-black/35 backdrop-blur-xl"
         >
-          <div className="absolute left-5 top-5 z-20 flex items-center gap-3">
-            <div className="h-2.5 w-2.5 rounded-full bg-bio-mint shadow-[0_0_18px_rgba(126,255,196,0.9)]" />
-            <p className="font-mono text-xs uppercase tracking-[0.28em] text-emerald-100/80">
-              {playbackStatus === "idle" ? "awaiting launch" : playbackStatus}
+          {/* Sci-fi corner brackets */}
+          <div className="pointer-events-none absolute left-3 top-3 h-8 w-8 border-l-2 border-t-2 border-bio-mint/30" />
+          <div className="pointer-events-none absolute right-3 top-3 h-8 w-8 border-r-2 border-t-2 border-bio-mint/30" />
+          <div className="pointer-events-none absolute bottom-[68px] left-3 h-8 w-8 border-b-2 border-l-2 border-bio-mint/15" />
+          <div className="pointer-events-none absolute bottom-[68px] right-3 h-8 w-8 border-b-2 border-r-2 border-bio-mint/15" />
+
+          {/* Status dot — top left */}
+          <div className="absolute left-5 top-5 z-20 flex items-center gap-2.5">
+            <span className="relative flex h-2 w-2 flex-shrink-0">
+              {status.ping && (
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-bio-mint opacity-55" />
+              )}
+              <span className={`relative inline-flex h-2 w-2 rounded-full ${status.dotClass}`} />
+            </span>
+            <p className={`font-mono text-[10px] uppercase tracking-[0.28em] ${status.textClass}`}>
+              {status.label}
             </p>
           </div>
+
+          {/* HUD overlays (analytics card + glass control buttons) — active only */}
+          <AnimatePresence>
+            {isActive && <SimulationHUD key="hud" />}
+          </AnimatePresence>
+
+          {/* Event timeline — always visible at bottom */}
           <div className="absolute bottom-4 left-4 right-4 z-20">
             <EventTimeline />
           </div>
+
+          {/* 3-D scene fills the panel */}
           <SimulationScene />
         </motion.div>
 
-        <AnalyticsPanel />
+        {/* ── Right panel — slides out when simulation starts ── */}
+        <AnimatePresence initial={false}>
+          {!isActive && (
+            <motion.div
+              key="right-panel"
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 24 }}
+              transition={PANEL_TRANSITION}
+              className="w-[340px] flex-shrink-0"
+            >
+              <AnalyticsPanel />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </section>
 
+      {/* Floating current-event toast — active only */}
       <motion.div
         key={currentEvent?.type ?? "none"}
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: currentEvent ? 1 : 0, y: 0 }}
-        className="pointer-events-none fixed left-1/2 top-5 z-30 hidden -translate-x-1/2 rounded-full border border-emerald-200/20 bg-emerald-950/55 px-5 py-2 font-mono text-xs uppercase tracking-[0.22em] text-emerald-100 shadow-glow backdrop-blur-md md:block"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: currentEvent && isActive ? 1 : 0, y: 0 }}
+        transition={{ duration: 0.18 }}
+        className="pointer-events-none fixed left-1/2 top-4 z-30 hidden -translate-x-1/2 items-center gap-2 rounded-full border border-emerald-300/12 bg-black/70 px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.24em] text-bio-mint backdrop-blur-md md:flex"
       >
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-bio-mint" />
         {currentEvent?.type.replaceAll("_", " ")}
       </motion.div>
     </main>
