@@ -26,10 +26,41 @@ export function AnalyticsPanel() {
 
       {/* Metric cards */}
       <div className="grid grid-cols-2 gap-2">
-        <MetricCard icon={<TestTube2 size={15} />} label="Tests Used"  value={metrics.testsUsed.toLocaleString()} />
-        <MetricCard icon={<Siren size={15} />}      label="Infected"   value={metrics.infectedCount.toLocaleString()}  tone="danger" />
-        <MetricCard icon={<ShieldCheck size={15} />} label="Cleared"   value={metrics.clearedCount.toLocaleString()}   tone="mint" />
-        <MetricCard icon={<FlaskConical size={15} />} label="Saved"    value={metrics.testsSaved.toLocaleString()}      tone="amber" />
+        <MetricCard icon={<TestTube2 size={15} />}   label="Tests Used"      value={metrics.testsUsed.toLocaleString()} />
+        <MetricCard icon={<Siren size={15} />}        label="Infected"        value={metrics.infectedCount.toLocaleString()} tone="danger" />
+        <MetricCard icon={<ShieldCheck size={15} />}  label="Cleared"         value={metrics.clearedCount.toLocaleString()} tone="mint" />
+        <MetricCard
+          icon={<FlaskConical size={15} />}
+          label="Tests Saved"
+          value={metrics.testsSaved.toLocaleString()}
+          tone="amber"
+          subtitle={`vs. ${metrics.individualBaseline.toLocaleString()} individual`}
+        />
+      </div>
+
+      {/* Patients tested — full-width progress bar card */}
+      <div className="rounded-lg border border-white/8 bg-white/[0.03] px-3.5 py-3">
+        <div className="mb-2 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-white/45">
+            <Activity size={13} />
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em]">Patients Tested</span>
+          </div>
+          <span className="font-mono text-sm font-semibold text-white">
+            {(metrics.clearedCount + metrics.confirmedInfected).toLocaleString()}
+            <span className="text-white/30"> / {metrics.individualBaseline.toLocaleString()}</span>
+          </span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-white/6">
+          <motion.div
+            className="h-full rounded-full bg-gradient-to-r from-white/40 to-white/60"
+            animate={{
+              width: metrics.individualBaseline > 0
+                ? `${Math.min(((metrics.clearedCount + metrics.confirmedInfected) / metrics.individualBaseline) * 100, 100)}%`
+                : "0%",
+            }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          />
+        </div>
       </div>
 
       {/* Efficiency meter */}
@@ -105,9 +136,10 @@ interface MetricCardProps {
   label: string;
   value: string;
   tone?: "mint" | "amber" | "danger";
+  subtitle?: string;
 }
 
-function MetricCard({ icon, label, value, tone = "mint" }: MetricCardProps) {
+function MetricCard({ icon, label, value, tone = "mint", subtitle }: MetricCardProps) {
   const styles = {
     mint:   { border: "border-white/8",        icon: "text-bio-mint",  value: "text-white"      },
     danger: { border: "border-red-400/12",     icon: "text-red-400",   value: "text-red-200"    },
@@ -119,6 +151,9 @@ function MetricCard({ icon, label, value, tone = "mint" }: MetricCardProps) {
       <div className={`mb-2 ${styles.icon}`}>{icon}</div>
       <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/32">{label}</p>
       <p className={`mt-0.5 font-mono text-lg font-semibold leading-none ${styles.value}`}>{value}</p>
+      {subtitle && (
+        <p className="mt-1 font-mono text-[8px] text-white/22">{subtitle}</p>
+      )}
     </div>
   );
 }

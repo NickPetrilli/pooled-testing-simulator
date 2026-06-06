@@ -6,6 +6,13 @@ import { SimulationHUD } from "./components/SimulationHUD";
 import { SimulationScene } from "./three/SimulationScene";
 import { useSimulationStore } from "./state/simulationStore";
 
+const PHASE_BANNERS: Partial<Record<string, { text: string; color: string }>> = {
+  POOL_RESULT_POSITIVE:     { text: "POSITIVE POOL DETECTED — SPLITTING INTO 2 GROUPS OF 4", color: "#ff4b4b" },
+  GROUP_SPLIT:              { text: "SPLITTING → 2 SUBGROUPS OF 4 FOR TARGETED TESTING",     color: "#ff8c42" },
+  SUBGROUP_RESULT_POSITIVE: { text: "SUBGROUP POSITIVE — INDIVIDUAL TESTING REQUIRED",        color: "#ff4b4b" },
+  SIMULATION_COMPLETE:      { text: "SIMULATION COMPLETE",                                    color: "#7effc4" },
+};
+
 const STATUS_CONFIG = {
   idle:     { label: "awaiting launch",   dotClass: "bg-emerald-400/30", textClass: "text-emerald-400/50", ping: false },
   running:  { label: "simulation active", dotClass: "bg-bio-mint",       textClass: "text-bio-mint",       ping: true  },
@@ -115,6 +122,36 @@ export function App() {
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-bio-mint" />
         {currentEvent?.type.replaceAll("_", " ")}
       </motion.div>
+
+      {/* Phase banner — prominent alert for the key split moments */}
+      <AnimatePresence>
+        {isActive && currentEvent && PHASE_BANNERS[currentEvent.type] && (
+          <motion.div
+            key={currentEvent.type}
+            initial={{ opacity: 0, scale: 0.92, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: -8 }}
+            transition={{ duration: 0.22, ease: [0.2, 0, 0.2, 1] }}
+            className="pointer-events-none fixed bottom-24 left-1/2 z-30 -translate-x-1/2"
+          >
+            <div
+              className="flex items-center gap-3 rounded-lg border px-5 py-2.5 font-mono text-sm font-bold uppercase tracking-[0.18em] backdrop-blur-md"
+              style={{
+                color:           PHASE_BANNERS[currentEvent.type]!.color,
+                borderColor:     PHASE_BANNERS[currentEvent.type]!.color + "55",
+                backgroundColor: PHASE_BANNERS[currentEvent.type]!.color + "12",
+                boxShadow:       `0 0 24px ${PHASE_BANNERS[currentEvent.type]!.color}30`,
+              }}
+            >
+              <span
+                className="h-2 w-2 animate-pulse rounded-full"
+                style={{ backgroundColor: PHASE_BANNERS[currentEvent.type]!.color }}
+              />
+              {PHASE_BANNERS[currentEvent.type]!.text}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

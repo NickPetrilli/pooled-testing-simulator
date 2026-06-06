@@ -41,7 +41,7 @@ export function ControlPanel() {
             label="Population"
             value={config.populationSize}
             min={16}
-            max={512}
+            max={2048}
             step={8}
             suffix=" people"
             disabled={isLocked}
@@ -62,8 +62,8 @@ export function ControlPanel() {
             label="Playback Speed"
             value={config.speed}
             min={0.5}
-            max={5}
-            step={0.1}
+            max={10}
+            step={0.5}
             suffix="×"
             accent="amber"
             onChange={(speed) => updateConfig({ speed })}
