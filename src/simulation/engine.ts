@@ -26,6 +26,7 @@ export class PooledTestingEngine {
     }
 
     const pools = this.splitInGroups(people, this.config.groupSize);
+    const totalPools = pools.length;
 
     for (const [poolIndex, group] of pools.entries()) {
       const pool = this.createPool(`pool-${poolIndex + 1}`, group, "pool");
@@ -33,7 +34,7 @@ export class PooledTestingEngine {
       group.forEach((person, memberIndex) => {
         person.poolId = pool.id;
         person.status = "pooling";
-        person.target = poolTarget(poolIndex, memberIndex, group.length);
+        person.target = poolTarget(poolIndex, memberIndex, group.length, totalPools);
       });
 
       yield { type: "POOL_CREATED", pool };
