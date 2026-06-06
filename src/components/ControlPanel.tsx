@@ -1,87 +1,108 @@
-import { motion } from "framer-motion";
-import { Pause, Play, RotateCcw, ScanLine, StepForward } from "lucide-react";
+import { Lock, Pause, Play, RotateCcw, ScanLine, StepForward } from "lucide-react";
 import { useSimulationStore } from "../state/simulationStore";
 
 export function ControlPanel() {
   const { config, playbackStatus, updateConfig, start, pause, resume, reset } = useSimulationStore();
+  const isLocked   = playbackStatus === "running" || playbackStatus === "paused";
+  const isInactive = playbackStatus === "idle" || playbackStatus === "complete";
 
   return (
-    <motion.aside
-      initial={{ opacity: 0, x: -24 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.65, ease: "easeOut" }}
-      className="flex min-h-[560px] flex-col justify-between rounded-lg border border-emerald-200/15 bg-[#07130f]/72 p-5 shadow-glow backdrop-blur-xl"
-    >
-      <div className="space-y-6">
+    <aside className="flex h-full flex-col justify-between rounded-xl border border-white/8 bg-black/40 p-5 backdrop-blur-xl">
+      {/* Header */}
+      <div className="space-y-5">
         <div>
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200/15 bg-emerald-300/8 px-3 py-1 text-xs uppercase tracking-[0.24em] text-emerald-100/75">
-            <ScanLine size={14} />
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/14 bg-emerald-400/6 px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.3em] text-emerald-300/60">
+            <ScanLine size={11} />
             BioScan Engine
           </div>
-          <h1 className="text-3xl font-semibold leading-tight text-white">Pooled Testing Simulator</h1>
-          <p className="mt-3 text-sm leading-6 text-emerald-50/68">
-            Event-driven COVID-19 pooled testing, reimagined as a real-time cinematic TypeScript simulation.
+          <h1 className="text-2xl font-semibold leading-snug tracking-tight text-white">
+            Pooled Testing
+            <br />
+            <span className="text-bio-mint">Simulator</span>
+          </h1>
+          <p className="mt-3 text-sm leading-relaxed text-white/40">
+            Event-driven COVID-19 pooled testing visualized as a real-time cinematic simulation.
           </p>
         </div>
 
-        <ControlRange
-          label="Population"
-          value={config.populationSize}
-          min={16}
-          max={512}
-          step={8}
-          suffix="people"
-          onChange={(populationSize) => updateConfig({ populationSize })}
-          disabled={playbackStatus === "running" || playbackStatus === "paused"}
-        />
-        <ControlRange
-          label="Infection Rate"
-          value={config.infectionRate}
-          min={0}
-          max={30}
-          step={1}
-          suffix="%"
-          onChange={(infectionRate) => updateConfig({ infectionRate })}
-          disabled={playbackStatus === "running" || playbackStatus === "paused"}
-        />
-        <ControlRange
-          label="Playback Speed"
-          value={config.speed}
-          min={0.5}
-          max={5}
-          step={0.1}
-          suffix="x"
-          onChange={(speed) => updateConfig({ speed })}
-        />
+        {/* Section divider */}
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          <span className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.3em] text-white/25">
+            {isLocked && <Lock size={8} />}
+            {isLocked ? "config locked" : "configuration"}
+          </span>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        </div>
+
+        {/* Sliders */}
+        <div className="space-y-2.5">
+          <ControlRange
+            label="Population"
+            value={config.populationSize}
+            min={16}
+            max={512}
+            step={8}
+            suffix=" people"
+            disabled={isLocked}
+            onChange={(populationSize) => updateConfig({ populationSize })}
+          />
+          <ControlRange
+            label="Infection Rate"
+            value={config.infectionRate}
+            min={0}
+            max={30}
+            step={1}
+            suffix="%"
+            disabled={isLocked}
+            accent="danger"
+            onChange={(infectionRate) => updateConfig({ infectionRate })}
+          />
+          <ControlRange
+            label="Playback Speed"
+            value={config.speed}
+            min={0.5}
+            max={5}
+            step={0.1}
+            suffix="×"
+            accent="amber"
+            onChange={(speed) => updateConfig({ speed })}
+          />
+        </div>
       </div>
 
-      <div className="space-y-3">
+      {/* Controls */}
+      <div className="space-y-2.5">
+        <div className="h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
+
+        {/* Start button */}
         <button
           onClick={start}
-          className="group flex h-12 w-full items-center justify-center gap-2 rounded-md bg-emerald-300 text-sm font-semibold uppercase tracking-[0.2em] text-emerald-950 shadow-glow transition hover:bg-bio-mint"
+          className="btn-shimmer group relative flex h-12 w-full cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-lg bg-gradient-to-r from-emerald-400 to-bio-mint text-sm font-semibold uppercase tracking-[0.2em] text-emerald-950 shadow-glow transition-all duration-200 hover:shadow-[0_0_48px_rgba(126,255,196,0.5)]"
         >
-          <Play size={17} className="transition group-hover:scale-110" />
-          Start
+          <Play size={15} className="transition-transform duration-150 group-hover:scale-110" />
+          Run Simulation
         </button>
-        <div className="grid grid-cols-2 gap-3">
+
+        <div className="grid grid-cols-2 gap-2.5">
           <button
             onClick={playbackStatus === "paused" ? resume : pause}
-            disabled={playbackStatus === "idle" || playbackStatus === "complete"}
-            className="flex h-11 items-center justify-center gap-2 rounded-md border border-emerald-200/15 bg-white/7 text-sm text-emerald-50 transition hover:bg-white/12 disabled:cursor-not-allowed disabled:opacity-35"
+            disabled={isInactive}
+            className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 text-sm text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-28"
           >
-            {playbackStatus === "paused" ? <StepForward size={16} /> : <Pause size={16} />}
+            {playbackStatus === "paused" ? <StepForward size={14} /> : <Pause size={14} />}
             {playbackStatus === "paused" ? "Resume" : "Pause"}
           </button>
           <button
             onClick={reset}
-            className="flex h-11 items-center justify-center gap-2 rounded-md border border-amber-200/20 bg-amber-200/8 text-sm text-amber-50 transition hover:bg-amber-200/14"
+            className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-amber-400/14 bg-amber-400/5 text-sm text-amber-200/70 transition-all duration-200 hover:border-amber-400/28 hover:bg-amber-400/10 hover:text-amber-100"
           >
-            <RotateCcw size={16} />
+            <RotateCcw size={14} />
             Reset
           </button>
         </div>
       </div>
-    </motion.aside>
+    </aside>
   );
 }
 
@@ -93,17 +114,29 @@ interface ControlRangeProps {
   step: number;
   suffix: string;
   disabled?: boolean;
+  accent?: "mint" | "danger" | "amber";
   onChange: (value: number) => void;
 }
 
-function ControlRange({ label, value, min, max, step, suffix, disabled, onChange }: ControlRangeProps) {
+function ControlRange({
+  label, value, min, max, step, suffix, disabled, accent = "mint", onChange,
+}: ControlRangeProps) {
+  const valueColor = accent === "danger" ? "text-red-300" : accent === "amber" ? "text-amber-300" : "text-bio-mint";
+
   return (
-    <label className="block rounded-lg border border-white/10 bg-white/[0.045] p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <span className="text-sm font-medium text-emerald-50/80">{label}</span>
-        <span className="font-mono text-sm text-bio-mint">
-          {value}
-          {suffix}
+    <div
+      className={`rounded-lg border p-3.5 transition-all duration-200 ${
+        disabled
+          ? "border-white/5 bg-white/[0.02] opacity-45"
+          : "border-white/8 bg-white/[0.03] hover:border-white/14"
+      }`}
+    >
+      <div className="mb-2.5 flex items-center justify-between">
+        <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/50">
+          {label}
+        </span>
+        <span className={`font-mono text-sm font-semibold ${valueColor}`}>
+          {value}{suffix}
         </span>
       </div>
       <input
@@ -113,9 +146,12 @@ function ControlRange({ label, value, min, max, step, suffix, disabled, onChange
         step={step}
         value={value}
         disabled={disabled}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className="w-full accent-emerald-300 disabled:opacity-40"
+        onChange={(e) => onChange(Number(e.target.value))}
       />
-    </label>
+      <div className="mt-1 flex justify-between font-mono text-[9px] text-white/18">
+        <span>{min}{suffix}</span>
+        <span>{max}{suffix}</span>
+      </div>
+    </div>
   );
 }
