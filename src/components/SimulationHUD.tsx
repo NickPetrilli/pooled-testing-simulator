@@ -51,11 +51,11 @@ export function SimulationHUD() {
 
       {/* ── Bottom-center glass control buttons ── */}
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 16, x: "-50%" }}
+        animate={{ opacity: 1, y: 0, x: "-50%" }}
+        exit={{ opacity: 0, y: 16, x: "-50%" }}
         transition={{ duration: 0.35, ease: "easeOut", delay: 0.05 }}
-        className="absolute bottom-[72px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-3"
+        className="absolute bottom-[72px] left-1/2 z-20 flex items-center gap-3"
       >
         {isComplete ? (
           <>
