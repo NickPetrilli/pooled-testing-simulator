@@ -13,6 +13,15 @@ const PHASE_BANNERS: Partial<Record<string, { text: string; color: string }>> = 
   SIMULATION_COMPLETE:      { text: "SIMULATION COMPLETE",                                    color: "#7effc4" },
 };
 
+// Color for the top event-type toast pill — red for positive detections, mint otherwise
+const EVENT_TOAST_COLOR: Partial<Record<string, string>> = {
+  POOL_RESULT_POSITIVE:     "#ff4b4b",
+  SUBGROUP_RESULT_POSITIVE: "#ff4b4b",
+  INDIVIDUAL_POSITIVE:      "#ff4b4b",
+  GROUP_SPLIT:              "#ff8c42",
+};
+const TOAST_COLOR_FALLBACK = "#7effc4";
+
 const STATUS_CONFIG = {
   idle:     { label: "awaiting launch",   dotClass: "bg-emerald-400/30", textClass: "text-emerald-400/50", ping: false },
   running:  { label: "simulation active", dotClass: "bg-bio-mint",       textClass: "text-bio-mint",       ping: true  },
@@ -26,8 +35,11 @@ export function App() {
   const playbackStatus = useSimulationStore((state) => state.playbackStatus);
   const currentEvent   = useSimulationStore((state) => state.currentEvent);
 
-  const status   = STATUS_CONFIG[playbackStatus] ?? STATUS_CONFIG.idle;
-  const isActive = playbackStatus !== "idle";
+  const status     = STATUS_CONFIG[playbackStatus] ?? STATUS_CONFIG.idle;
+  const isActive   = playbackStatus !== "idle";
+  const toastColor = currentEvent
+    ? (EVENT_TOAST_COLOR[currentEvent.type] ?? TOAST_COLOR_FALLBACK)
+    : TOAST_COLOR_FALLBACK;
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#04090c] text-white">
@@ -114,12 +126,19 @@ export function App() {
       {/* Floating current-event toast — active only */}
       <motion.div
         key={currentEvent?.type ?? "none"}
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: currentEvent && isActive ? 1 : 0, y: 0 }}
+        initial={{ opacity: 0, y: -10, x: "-50%" }}
+        animate={{ opacity: currentEvent && isActive ? 1 : 0, y: 0, x: "-50%" }}
         transition={{ duration: 0.18 }}
-        className="pointer-events-none fixed left-1/2 top-4 z-30 hidden -translate-x-1/2 items-center gap-2 rounded-full border border-emerald-300/12 bg-black/70 px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.24em] text-bio-mint backdrop-blur-md md:flex"
+        className="pointer-events-none fixed left-1/2 top-4 z-30 hidden items-center gap-2 rounded-full bg-black/70 px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.24em] backdrop-blur-md md:flex"
+        style={{
+          color:  toastColor,
+          border: `1px solid ${toastColor}25`,
+        }}
       >
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-bio-mint" />
+        <span
+          className="h-1.5 w-1.5 animate-pulse rounded-full"
+          style={{ backgroundColor: toastColor }}
+        />
         {currentEvent?.type.replaceAll("_", " ")}
       </motion.div>
 
@@ -128,11 +147,11 @@ export function App() {
         {isActive && currentEvent && PHASE_BANNERS[currentEvent.type] && (
           <motion.div
             key={currentEvent.type}
-            initial={{ opacity: 0, scale: 0.92, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: -8 }}
+            initial={{ opacity: 0, scale: 0.92, y: 12, x: "-50%" }}
+            animate={{ opacity: 1, scale: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, scale: 0.96, y: -8, x: "-50%" }}
             transition={{ duration: 0.22, ease: [0.2, 0, 0.2, 1] }}
-            className="pointer-events-none fixed bottom-24 left-1/2 z-30 -translate-x-1/2"
+            className="pointer-events-none fixed bottom-24 left-1/2 z-30"
           >
             <div
               className="flex items-center gap-3 rounded-lg border px-5 py-2.5 font-mono text-sm font-bold uppercase tracking-[0.18em] backdrop-blur-md"
