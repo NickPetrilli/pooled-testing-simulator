@@ -123,9 +123,9 @@ function applyEvent(
           subgroupId: pool.id,
           status: "pooling",
           target: [
-            person.target[0] + (subgroupIndex === 0 ? -0.76 : 0.76),
-            person.target[1] + 0.5,
-            person.target[2] + (index - pool.personIds.length / 2) * 0.14,
+            person.target[0] + (subgroupIndex === 0 ? -1.2 : 1.2),
+            person.target[1] + 0.55,
+            person.target[2] + (index - pool.personIds.length / 2) * 0.28,
           ],
         }));
       });

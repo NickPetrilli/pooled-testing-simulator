@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { useSimulationStore } from "../state/simulationStore";
 import { ParticleField } from "./ParticleField";
 import { PersonNode } from "./PersonNode";
+import { PoolRings } from "./PoolRings";
 
 export function SimulationScene() {
   const people = useSimulationStore((state) => state.people);
@@ -23,6 +24,7 @@ export function SimulationScene() {
           {people.map((person) => (
             <PersonNode key={person.id} person={person} />
           ))}
+          <PoolRings />
         </Float>
         <ParticleField />
         <Grid
