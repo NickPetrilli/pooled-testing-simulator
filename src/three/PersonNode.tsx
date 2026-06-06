@@ -17,13 +17,24 @@ export function PersonNode({ person }: PersonNodeProps) {
   useFrame((state, delta) => {
     if (!meshRef.current) return;
     meshRef.current.position.lerp(target, 1 - Math.pow(0.04, delta));
-    const pulse = 1 + Math.sin(state.clock.elapsedTime * 5 + person.id) * 0.08;
-    const statusScale = person.status === "confirmed-infected" ? 1.45 : person.status === "testing" ? 1.24 : 1;
-    meshRef.current.scale.setScalar(pulse * statusScale);
+
+    // pulse speed and scale per status
+    const t = state.clock.elapsedTime;
+    let pulseFreq = 5;
+    let pulseAmp = 0.08;
+    let baseScale = 1;
+    if (person.status === "confirmed-infected") { pulseFreq = 2.5; pulseAmp = 0.14; baseScale = 1.45; }
+    else if (person.status === "positive-subgroup") { pulseFreq = 9; pulseAmp = 0.11; baseScale = 1.18; }
+    else if (person.status === "testing") { pulseFreq = 6; pulseAmp = 0.06; baseScale = 1.24; }
+    const pulse = 1 + Math.sin(t * pulseFreq + person.id) * pulseAmp;
+    meshRef.current.scale.setScalar(pulse * baseScale);
 
     if (lightRef.current) {
       lightRef.current.position.copy(meshRef.current.position);
-      lightRef.current.intensity = person.status === "untested" ? 0 : person.status === "confirmed-infected" ? 1.35 : 0.65;
+      lightRef.current.intensity =
+        person.status === "untested" ? 0 :
+        person.status === "confirmed-infected" ? 1.6 :
+        person.status === "positive-subgroup" ? 1.1 : 0.65;
     }
   });
 
