@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
-import { FlaskConical, Pause, Play, ShieldCheck, Siren, Square, TestTube2, TrendingUp } from "lucide-react";
+import { Activity, ArrowLeft, FlaskConical, Pause, Play, RotateCcw, ShieldCheck, Siren, Square, TestTube2, TrendingUp } from "lucide-react";
 import { useSimulationStore } from "../state/simulationStore";
 
 export function SimulationHUD() {
-  const { metrics, playbackStatus, pause, resume, reset } = useSimulationStore();
+  const { metrics, playbackStatus, pause, resume, reset, start } = useSimulationStore();
 
   const isPaused    = playbackStatus === "paused";
   const isComplete  = playbackStatus === "complete";
@@ -23,10 +23,11 @@ export function SimulationHUD() {
         </p>
 
         <div className="space-y-2">
-          <HudStat icon={<TestTube2 size={12} />} label="Tests Used" value={metrics.testsUsed} />
-          <HudStat icon={<Siren size={12} />}     label="Infected"   value={metrics.infectedCount}  color="text-red-300" />
-          <HudStat icon={<ShieldCheck size={12} />} label="Cleared"  value={metrics.clearedCount}   color="text-bio-mint" />
-          <HudStat icon={<FlaskConical size={12} />} label="Saved"   value={metrics.testsSaved}      color="text-amber-300" />
+          <HudStat icon={<TestTube2 size={12} />}   label="Tests Used"      value={metrics.testsUsed} />
+          <HudStat icon={<Siren size={12} />}        label="Infected"        value={metrics.infectedCount}  color="text-red-300" />
+          <HudStat icon={<ShieldCheck size={12} />}  label="Cleared"         value={metrics.clearedCount}   color="text-bio-mint" />
+          <HudStat icon={<FlaskConical size={12} />} label="Tests Saved"     value={metrics.testsSaved}     color="text-amber-300" />
+          <HudStat icon={<Activity size={12} />}     label="Patients Tested" value={metrics.clearedCount + metrics.confirmedInfected} color="text-white/70" />
         </div>
 
         <div className="mt-3 border-t border-white/8 pt-3">
@@ -57,12 +58,20 @@ export function SimulationHUD() {
         className="absolute bottom-[72px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-3"
       >
         {isComplete ? (
-          <GlassButton
-            onClick={reset}
-            icon={<Play size={15} />}
-            label="Run Again"
-            tone="mint"
-          />
+          <>
+            <GlassButton
+              onClick={reset}
+              icon={<ArrowLeft size={15} />}
+              label="Edit Parameters"
+              tone="neutral"
+            />
+            <GlassButton
+              onClick={start}
+              icon={<RotateCcw size={15} />}
+              label="Run Again"
+              tone="mint"
+            />
+          </>
         ) : (
           <>
             <GlassButton
